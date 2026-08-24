@@ -206,5 +206,5 @@ Gravity is released under the [GNU Affero General Public License v3.0 (AGPL-3.0)
 ---
 
 <p align="center">
-  <b>Gravity AI</b> • Created by <b>Giovanni D'Arienzo</b> • Empowering Developers Through Autonomous Multi-Agent Engineering
+  <b>Gravity AI</b> • Created by <b>Giovanni D'Arienzo - gdarienzo79-gmail.com</b> • Empowering Developers Through Autonomous Multi-Agent Engineering
 </p>
