@@ -1,0 +1,546 @@
+# Gravity — Architecture Document
+
+## Overview
+
+Gravity is a **multi-agent AI orchestration platform** for local autonomous software development. Built as a .NET 10 Windows Forms desktop application, it provides a chat-driven interface where users describe tasks in natural language and AI agents autonomously explore codebases, plan changes, execute shell commands, and produce code modifications.
+
+---
+
+## High-Level Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                          UI Layer                               │
+│  Form1 (WinForms)  ←→  WPF Controls (via ElementHost)         │
+│  Chat Bubbles │ Artifacts │ Editor (AvalonEdit) │ Sidebar       │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │
+┌───────────────────────────┴─────────────────────────────────────┐
+│                     Orchestration Layer                         │
+│  Orchestrator  ←→  IntentRouter  ←→  TaskPlanner               │
+│  (Agent Pool)     (Layer 1)         (Layer 2)                  │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │
+┌───────────────────────────┴─────────────────────────────────────┐
+│                       Agent Layer                               │
+│  ReasoningRouter (Command Resolution)                           │
+│  ├─ FileAgent (code_editor)                                    │
+│  ├─ ShellAgent (terminal)                                      │
+│  ├─ KnowledgeAgent (knowledge)                                 │
+│  ├─ GravityAgent (gravity)                                     │
+│  ├─ SearchAgent (search)                                       │
+│  ├─ DynamicAgent (JSON-defined)                                │
+│  └─ McpAgent (MCP protocol)                                   │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │
+┌───────────────────────────┴─────────────────────────────────────┐
+│                      Service Layer                              │
+│  IModelClient │ RagService │ KnowledgeService │ RoslynService  │
+│  GitService │ FileSearchService │ BuildService │ McpClient     │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │
+┌───────────────────────────┴─────────────────────────────────────┐
+│                     Infrastructure                              │
+│  Microsoft.Extensions.DependencyInjection                      │
+│  ISettingsService (JSON persistence)                            │
+│  OpenAI-compatible HTTP API │ MCP stdio protocol               │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Directory Structure
+
+```
+Gravity/
+├── Core/                    # All business logic, agents, and services
+│   ├── IAgent.cs            # Agent interface contract
+│   ├── AgentDescriptor.cs   # Agent metadata (name, verbs, actions)
+│   ├── AgentRequest.cs      # Structured tool call request
+│   ├── AgentResult.cs       # Agent execution result
+│   ├── Interfaces.cs        # IRouterService, IRagService, IKnowledgeService, AgentStatus
+│   ├── IModelClient.cs      # LLM client interface + ChatMessage/ToolCall DTOs
+│   ├── IntentClassification.cs  # IntentType, PlanShape, IntentClassification, TaskPlan, PlannedStep
+│   │
+│   ├── IntentRouter.cs      # Layer 1: Intent + plan shape classification via LLM
+│   ├── TaskPlanner.cs       # Layer 2: Step-by-step TaskPlan compilation via LLM
+│   ├── Orchestrator.cs      # Agent pool, spawn, fast-path, model response parsing
+│   ├── ReasoningRouter.cs   # Command routing: agent name → IAgent.ExecuteAsync
+│   │
+│   ├── GenericOpenAIClient.cs  # OpenAI-compatible streaming + non-streaming HTTP client
+│   ├── FileAgent.cs         # code_editor: read, write, search, glob, apply_diff
+│   ├── ShellAgent.cs        # terminal: sandboxed shell command execution
+│   ├── KnowledgeAgent.cs    # knowledge: SOP and learned pattern management
+│   ├── GravityAgent.cs      # gravity: meta-tool (about, context, help, plan, artifacts)
+│   ├── SearchAgent.cs       # search: DuckDuckGo web search
+│   ├── DynamicAgent.cs      # JSON-defined agents loaded from agents/ directory
+│   ├── DynamicAgentDefinition.cs  # JSON schema for dynamic agent definitions
+│   ├── AgentLoader.cs       # Loads DynamicAgentDefinition from agents/*.json
+│   ├── McpAgent.cs          # MCP protocol agent wrapper
+│   ├── McpClient.cs         # MCP stdio JSON-RPC client
+│   │
+│   ├── RagService.cs        # Workspace indexing + semantic context retrieval
+│   ├── RagIndex.cs          # In-memory file chunk index (keyword search)
+│   ├── KnowledgeService.cs  # Knowledge item persistence and retrieval
+│   ├── RoslynService.cs     # Roslyn-based C# analysis (compilation, symbols, diagnostics)
+│   ├── BuildService.cs      # dotnet build execution
+│   ├── GitService.cs        # Git operations (diff, status)
+│   ├── FileSearchService.cs # File I/O abstraction with change notifications
+│   │
+│   ├── AppSettings.cs       # Settings model + ISettingsService + SettingsService
+│   ├── IProjectContext.cs   # Project path + active file tracking
+│   ├── ThemeService.cs      # Dark/light theme color management
+│   ├── SessionService.cs    # Conversation session persistence
+│   ├── Artifact.cs          # Artifact types (TaskPlan, ImplementationPlan, Walkthrough, Diff)
+│   ├── ArtifactService.cs   # In-memory artifact store
+│   ├── Plan.cs              # Legacy Plan/PlanStep models
+│   └── PlanParser.cs        # JSON extraction from model responses
+│
+├── UI/                      # WinForms + WPF hybrid UI components
+│   ├── ChatMessageBubble.cs      # Chat message display
+│   ├── ArtifactCard.cs           # Artifact preview card
+│   ├── ArtifactPanel.cs          # Artifact detail panel (WPF)
+│   ├── ApprovalCard.cs           # Tool/plan approval UI
+│   ├── CollapsibleStepGroup.cs   # Grouped reasoning steps
+│   ├── CollapsibleStepPanel.cs   # Individual reasoning step
+│   ├── ConnectedAgentsControl.cs # Connected agent badges
+│   ├── LoadingSpinner.cs         # Loading animation
+│   ├── SemanticColorizer.cs      # Roslyn-based syntax highlighting
+│   ├── MinimapPanel.cs           # Code minimap
+│   ├── TerminalPanel.cs          # Terminal output display
+│   ├── ImpactPanel.cs            # Blast radius visualization
+│   ├── ReasoningVisualizer.cs    # Agent reasoning display
+│   ├── ModernSidebar.cs          # Sidebar control
+│   ├── RoundedTextBox.cs         # Custom input box
+│   ├── DoubleBufferedControls.cs # Double-buffered Panel/FlowLayoutPanel
+│   └── MauiChatMessageView.cs    # MAUI chat view (unused/legacy)
+│
+├── ViewModels/
+│   └── ChatViewModel.cs          # MVVM binding for chat UI (unused/legacy)
+│
+├── Models/
+│   └── ChatMessageModel.cs       # Chat message model (unused/legacy)
+│
+├── agents/                  # JSON-defined dynamic agent definitions
+├── knowledge/               # Knowledge base items (markdown files)
+├── Resources/               # Icons and images
+├── Skills/                  # Agent skill definitions (excluded from build)
+├── Gravity.Tests/           # Test project
+├── TestClientProj/          # Test project for agent demos
+├── appsettings.json         # Default application settings
+├── Program.cs               # Entry point, DI container, agent registration
+├── Form1.cs                 # Main window (2000+ lines)
+├── SettingsPanel.cs         # Settings UI
+├── SplashScreen.cs          # Splash screen
+├── PreviewDialog.cs         # Preview dialog
+└── HelpDialog.cs            # Help dialog
+```
+
+---
+
+## Core Pipeline: Router-Worker Architecture
+
+### Layer 1 — Intent Classification (`IntentRouter`)
+
+The user's raw message is classified into:
+
+| Intent Type | Description |
+|---|---|
+| `Conversational` | Greetings, small-talk, status questions |
+| `CodeAnalysis` | Read-only exploration, search, explanation |
+| `CodeEdit` | Write operations, fixes, refactoring |
+| `ShellTask` | Build, test, compile commands |
+| `KnowledgeQuery` | Architecture, patterns, "what does X do" |
+| `FileStatsCount` | Line counts, sizes, existence checks |
+| `Unknown` | Ambiguous, fall back to full agent loop |
+
+And a **Plan Shape** is selected:
+
+| Shape | Behavior |
+|---|---|
+| `DirectAnswer` | No tools needed, respond directly |
+| `TaskList` | 1–5 deterministic tool-call steps |
+| `ImplementationPlan` | Full reasoning: propose → plan → execute |
+
+The LLM outputs exactly two tokens (e.g. `EDIT TASKLIST`).
+
+### Layer 2 — Task Planning (`TaskPlanner`)
+
+For `TaskList` intents, the planner compiles a concrete `TaskPlan`:
+
+```json
+{
+  "summary": "Read file X and extract key sections",
+  "steps": [
+    { "tool": "code_editor", "verb": "read_file", "args": { "path": "X" } },
+    { "tool": "code_editor", "verb": "search_in_files", "args": { "pattern": "keyword" } }
+  ]
+}
+```
+
+Steps support output chaining via `$stepN` references.
+
+### Layer 3 — Agent Execution (`Orchestrator` + `AppEngine`)
+
+The Orchestrator manages an **agent pool** (max 5 concurrent `AppEngine` instances). Each engine:
+
+1. Receives the classified intent and optional pre-planned steps
+2. Enters a reasoning loop (up to `MaxSteps` iterations)
+3. Calls the LLM to decide which tool to invoke
+4. Routes tool calls through `ReasoningRouter` → target `IAgent`
+5. Feeds observations back into the conversation
+6. Produces a final answer via `action.final`
+
+### Fast-Path Bypass
+
+Simple read/list commands (e.g. "show me Program.cs", "list files in src") are detected by regex and executed directly without LLM involvement.
+
+---
+
+## Agent System
+
+### IAgent Interface
+
+```csharp
+public interface IAgent
+{
+    Task<AgentResult> ExecuteAsync(AgentRequest request, CancellationToken ct);
+    AgentDescriptor Descriptor { get; }
+}
+```
+
+### Agent Descriptors
+
+Each agent exposes a structured descriptor defining:
+- **Name** — unique identifier (e.g. `code_editor`, `terminal`)
+- **Description** — what the agent does
+- **CanWrite** — whether it can modify files
+- **Actions** — list of `ActionMetadata` with name, description, parameters, and mutation flags
+
+### Built-In Agents
+
+| Agent | Name | Capabilities |
+|---|---|---|
+| `FileAgent` | `code_editor` | `read_file`, `write_file`, `apply_diff`, `list_directory`, `search_in_files`, `glob`, `grep`, `delete`, `read_range` |
+| `ShellAgent` | `terminal` | `run_command`, `dotnet`, `git`, `powershell`, `where` |
+| `KnowledgeAgent` | `knowledge` | `list`, `read`, `add` (SOP management) |
+| `GravityAgent` | `gravity` | `about`, `context`, `help`, `plan`, `propose`, `walkthrough` |
+| `SearchAgent` | `search` | `web`, `docs` (DuckDuckGo web search) |
+
+### Dynamic Agents (`DynamicAgent`)
+
+JSON-defined agents loaded from `agents/*.json` at startup:
+
+```json
+{
+  "name": "my_custom_agent",
+  "description": "Does custom things",
+  "system": "You are a specialized agent...",
+  "verbs": ["analyze", "summarize"],
+  "maxSteps": 5
+}
+```
+
+Dynamic agents use the LLM as their reasoning engine and route tool calls through the shared `ReasoningRouter`.
+
+### MCP Agents (`McpAgent`)
+
+Agents backed by Model Context Protocol (MCP) servers. Spawned as child processes, communicate via stdio JSON-RPC. Configured in `settings.json` under `McpServers`.
+
+---
+
+## ReasoningRouter — Command Resolution
+
+The router resolves tool calls in this order:
+
+1. **Dot-notation** — `agent.verb` splits into agent + verb
+2. **CLI alias redirection** — `dotnet`, `git`, `npm` etc. redirect to `terminal`
+3. **Exact match** — agent name lookup in the dictionary
+4. **Fuzzy match** — substring containment fallback
+5. **Parameter validation** — checks required parameters against `ActionMetadata`
+
+---
+
+## Model Client (`GenericOpenAIClient`)
+
+A generic OpenAI-compatible HTTP client supporting:
+
+- **Streaming** — SSE parsing for token-by-token responses
+- **Non-streaming** — single-shot completion
+- **Tool calling** — native function calling + JSON-in-content fallback
+- **Reasoning tokens** — streams `reasoning_content`/`thinking` to UI without corrupting tool-call JSON
+- **Multi-provider** — supports OpenAI, Ollama, LMStudio, OpenRouter, Groq, Google AI Studio, TogetherAI, GitHub Models
+- **Rate limiting** — exponential backoff retry (5 attempts)
+- **Per-provider connections** — each provider remembers its own URL, key, and model
+
+### Provider Configuration
+
+```csharp
+public enum LlmProvider
+{
+    OpenAI, LMStudio, Ollama, OpenRouter,
+    Groq, GoogleAIStudio, TogetherAI, GitHubModels
+}
+```
+
+---
+
+## Context & Knowledge Systems
+
+### RAG Service (`RagService`)
+
+Provides semantic context retrieval for agent reasoning:
+
+- **Indexing** — indexes `.cs`, `.ts`, `.js`, `.py`, `.go`, `.md`, `.json` files
+- **Incremental refresh** — only re-indexes changed files (5-minute full re-index interval)
+- **Context budget** — max 700 characters injected per step, 2 chunks per step
+- **Symbol extraction** — extracts class, method, property names as chunk metadata
+
+### Knowledge Service (`KnowledgeService`)
+
+Persistent knowledge base of Standard Operating Procedures (SOPs) and learned patterns:
+
+- Stored as markdown files in `knowledge/` directory
+- Agents can `add` new knowledge items at runtime
+- Queried via keyword matching against intent
+
+### Roslyn Service (`RoslynService`)
+
+Roslyn-based C# analysis providing:
+
+- **Compilation** — loads projects via MSBuild workspace
+- **Diagnostics** — project-wide and per-file error/warning analysis
+- **Architecture overview** — compressed namespace → class map for AI reasoning
+- **Syntax classification** — token-level highlighting for the code editor
+- **Symbol extraction** — classes, methods, properties with line numbers
+- **Blast radius** — finds all references to a symbol across the solution
+
+---
+
+## Artifact System
+
+Artifacts are structured outputs produced by agents during task execution:
+
+| Type | Purpose |
+|---|---|
+| `TaskPlan` | Checklist of sub-tasks with completion tracking |
+| `ImplementationPlan` | Detailed proposal for multi-file changes |
+| `Walkthrough` | Final summary of changes made |
+| `Diff` | Code diff output |
+| `General` | Freeform content |
+
+Artifacts are managed by `ArtifactService` (in-memory store) and displayed via `ArtifactCard` / `ArtifactPanel` UI components.
+
+---
+
+## UI Architecture
+
+### Technology Stack
+
+- **WinForms** — primary UI framework (`MaterialSkin.2` for Material Design styling)
+- **WPF (via ElementHost)** — hybrid hosting for rich controls:
+  - `AvalonEdit` — code editor with syntax highlighting
+  - `WPF ApprovalCard` — tool/plan approval dialogs
+  - `WPF ArtifactPanel` — artifact display
+- **Double-buffering** — applied to scroll containers and flow layouts for smooth rendering
+
+### Main Window Layout
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ Ribbon Bar (Folder, Run, Settings, Help)                 │
+├─────┬────────────────────────────────────────────────────┤
+│     │ Tab Strip (Chat, Code Files, Artifacts)            │
+│ A   ├────────────────────────────────────────────────────┤
+│ c   │                                                    │
+│ t   │  Main Document Area                                │
+│ i   │  ┌──────────────────────────────────────────────┐  │
+│ v   │  │  Chat Flow (bubbles, approval cards,         │  │
+│ i   │  │  step panels, artifact cards)                │  │
+│ t   │  └──────────────────────────────────────────────┘  │
+│ y   ├────────────────────────────────────────────────────┤
+│     │  Input Panel (rounded pill style)                  │
+│ B   │  [Input Box] [Send] [Stop]                         │
+│ a   └────────────────────────────────────────────────────┤
+│ r   │ Status Bar                                         │
+├─────┴────────────────────────────────────────────────────┤
+│ Breadcrumb Bar (file path)                               │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Sidebar Panels
+
+The activity bar toggles sidebar panels (with slide animation):
+
+- **Explorer** — file tree view with `FileSystemWatcher` for live updates
+- **Sessions** — conversation session history
+- **Settings** — `SettingsPanel` for provider, model, and development mode configuration
+
+### Theme System
+
+Dual-theme support (dark/light) with comprehensive color mapping across all UI elements. Theme is managed by `ThemeService` and applied via `ApplyTheme()` in `Form1`.
+
+---
+
+## Dependency Injection
+
+All services are registered as singletons in `Program.cs`:
+
+```csharp
+services.AddSingleton<IProjectContext, ProjectContext>();
+services.AddSingleton<ISettingsService, SettingsService>();
+services.AddSingleton<IShellLogger, ShellLoggerService>();
+services.AddSingleton<IThemeService, ThemeService>();
+services.AddSingleton<IModelClient, GenericOpenAIClient>();
+services.AddSingleton<IArtifactService, ArtifactService>();
+
+services.AddSingleton<GitService>();
+services.AddSingleton<FileSearchService>();
+services.AddSingleton<BuildService>();
+services.AddSingleton<RoslynService>();
+services.AddSingleton<RagService>();
+services.AddSingleton<KnowledgeService>();
+
+services.AddSingleton<IAgent, FileAgent>();
+services.AddSingleton<IAgent, ShellAgent>();
+services.AddSingleton<IAgent, KnowledgeAgent>();
+services.AddSingleton<IAgent, GravityAgent>();
+services.AddSingleton<IAgent, SearchAgent>();
+
+services.AddSingleton<ReasoningRouter>();
+services.AddSingleton<IntentRouter>();
+services.AddSingleton<TaskPlanner>();
+services.AddSingleton<Orchestrator>();
+```
+
+Dynamic agents (JSON-defined) and MCP agents are registered post-build in `RegisterDynamicAgents()` and `RegisterMcpAgents()`.
+
+---
+
+## Configuration
+
+Settings are persisted in `%APPDATA%/Gravity/settings.json`:
+
+```json
+{
+  "provider": "Ollama",
+  "baseUrl": "http://localhost:11434",
+  "apiKey": "not-needed",
+  "modelName": "qwen2.5-coder:1.5b",
+  "reasoningModelName": "qwen2.5-coder:1.5b",
+  "maxTokens": 8192,
+  "maxSteps": 50,
+  "devMode": "Autopilot",
+  "disableNativeToolCalls": true,
+  "mcpServers": {
+    "my-server": {
+      "name": "my-server",
+      "command": "my-mcp-server",
+      "args": ["--verbose"]
+    }
+  }
+}
+```
+
+### Development Modes
+
+| Mode | Behavior |
+|---|---|
+| `Autopilot` | Agents execute without confirmation |
+| `Review` | Approval required before destructive operations |
+| `Assisted` | Full human-in-the-loop for every action |
+
+---
+
+## Key Design Decisions
+
+1. **Hybrid WinForms + WPF** — WinForms for layout control, WPF (via `ElementHost`) for rich rendering (AvalonEdit, approval cards, artifact panels).
+
+2. **Agent Pool with max concurrency** — Limits resource usage while allowing parallel task execution.
+
+3. **Router-Worker separation** — Intent classification and task planning are separate LLM calls, enabling fast-path bypasses for simple queries.
+
+4. **Generic OpenAI-compatible client** — Works with any OpenAI-compatible API (Ollama, LMStudio, OpenRouter, etc.) without provider-specific code.
+
+5. **JSON-defined dynamic agents** — Extensibility without code changes; new agents can be added by dropping a JSON file into `agents/`.
+
+6. **MCP protocol support** — First-class integration with the Model Context Protocol ecosystem for external tool servers.
+
+7. **Knowledge base as markdown** — Human-readable, version-controllable SOPs that agents can learn from and contribute to.
+
+8. **Obfuscation on publish** — Uses Obfuscar for assembly obfuscation in Release builds.
+
+---
+
+## Advanced Subsystems
+
+### 1. Windows 10/11 Shell Integration & Single-Instance IPC (`WindowsIntegrationService`)
+
+- **Single-Instance IPC (`NamedPipeServerStream`)**: Uses a system Mutex (`Gravity_SingleInstance_Mutex_987A`) and background Named Pipe server (`Gravity_IPC_Pipe_987A`). When secondary instances or command-line file calls execute, target paths are sent to the active Gravity window, bringing it to the foreground via Win32 `SetForegroundWindow` and opening the file in a new tab.
+- **Windows Context Menu ("Open with Gravity")**: Automatically registers HKCU registry entries under `Software\Classes\*\shell\Gravity` and `Software\Classes\Directory\shell\Gravity` for instant right-click file & folder opening.
+- **Windows "Send To" Integration**: Generates a launcher shortcut in `%APPDATA%\Microsoft\Windows\SendTo\Gravity.cmd`.
+
+### 2. Bidirectional DOCX Preview & Rich Editor (`DocxPreviewService` & `DocxPreviewPanel`)
+
+- **OpenXml ↔ HTML Conversion**: Uses `DocumentFormat.OpenXml` to parse Word processing document elements (headings, paragraphs, tables, formatting, embedded drawings) into HTML and vice-versa.
+- **WPF WebView2 & Quill Editor**: Hosts Quill rich-text editor in a WPF `WebView2` control embedded via `ElementHost` into WinForms tab pages.
+- **Dynamic Theme Integration**: Extends `--bg`, `--surface`, `--text`, `--accent`, `--border`, and `--header-bg` CSS variables directly from `IThemeService.Colors` across Dark and Light modes.
+- **Image Editing & Serialization**: Supports interactive image resize handles (aspect-ratio locked) and drag-to-repositioning between paragraphs. On Save, extracts `<img src="data:image/...">` base64 payloads, creates OpenXml `ImagePart` binary packages, and constructs `Drawing` elements embedded in document runs.
+
+### 3. Autonomic Token Budget & Context Window Recovery (`AgentInstance` & `GenericOpenAIClient`)
+
+- **Proactive Context Token Tracking**: `AgentInstance` monitors history token/character size (`totalChars > 24000` or `History.Count > 12`) and triggers `CompressHistoryAsync` to compress intermediate reasoning history into a 120-word LLM session recap.
+- **Base64 Payload Stripping**: Strips raw base64 image strings from tool observations fed back to the LLM to prevent payload bloat.
+- **Autonomic Exception Interception & Self-Healing Retry**: Catches `413 RequestEntityTooLarge` or context window overflow errors during model streams, compresses session history, and automatically retries reasoning steps seamlessly.
+
+### 4. Solution Explorer File Management
+
+- **Context Menu Upload**: Includes a top-level `Upload File...` item in `_explorerContextMenu` to copy external files/folders into the selected workspace directory.
+- **Drag-and-Drop Upload**: Enables `fileTreeView.AllowDrop = true` with node-highlighting hover feedback and automatic file copy & tab opening on drop.
+
+---
+
+## Linux Portability & Cross-Platform Adaptation Strategy
+
+If moving Gravity from Windows to **Linux** (Ubuntu, Debian, Fedora, Arch, etc.):
+
+### 1. Business Logic & Core Services (100% Cross-Platform Ready)
+The entire `Core/` engine layer (.NET 10) is fully cross-platform and compiles natively on Linux:
+- `Orchestrator`, `AgentInstance`, `ReasoningRouter`, `IntentRouter`, `TaskPlanner`
+- `DocxPreviewService` (`DocumentFormat.OpenXml` cross-platform processing)
+- `GenericOpenAIClient`, `RoslynService`, `GitService`, `RagService`, `KnowledgeService`
+
+### 2. UI Migration Path (WinForms / WPF → Avalonia UI)
+- **UI Framework**: WinForms (`System.Windows.Forms`) and WPF (`ElementHost`) are Windows-only runtimes. Porting the UI to **Avalonia UI** (.NET cross-platform XAML framework) enables native rendering on Linux (X11 & Wayland).
+- **Editor Control**: Replace `AvalonEdit` with `AvaloniaEdit` (direct cross-platform port of AvalonEdit).
+- **WebView Control**: Replace Windows `WebView2` with `WebBrowser` / `WebKitGTK` or Avalonia's `WebView` / `Photino.NET` control for rendering the Quill DOCX editor.
+
+### 3. Linux System Integration Substitutions
+
+| Subsystem | Windows Implementation | Linux Adaptation |
+|---|---|---|
+| **Single-Instance IPC** | `NamedPipeServerStream` / Win32 Mutex | Unix Domain Sockets (`/tmp/gravity_ipc.sock`) |
+| **Shell Context Menu** | Windows Registry (`HKCU\Software\Classes`) | XDG Desktop Entry (`~/.local/share/applications/gravity.desktop` + MIME actions) |
+| **Window Activation** | Win32 `SetForegroundWindow` | X11 `XRaiseWindow` / `wmctrl` / Wayland `xdg-activation-v1` |
+| **Terminal Integration** | `PowerShell.exe` / `cmd.exe` | `/bin/bash`, `/bin/zsh`, `/bin/sh` |
+
+---
+
+## Technology Stack
+
+| Component | Technology |
+|---|---|
+| Runtime | .NET 10 (Windows, Linux, macOS) |
+| UI Framework | WinForms + WPF (Windows) / Avalonia UI (Linux Port Target) |
+| Material Design | MaterialSkin.2 |
+| Code Editor | AvalonEdit (Windows) / AvaloniaEdit (Linux) |
+| WebView | Microsoft.Web.WebView2 (Windows) / WebKitGTK (Linux) |
+| DOCX Processing | DocumentFormat.OpenXml |
+| Rich Text Editor | Quill.js (via WebView bridge) |
+| IPC / Shell | NamedPipeServerStream + HKCU Registry (Windows) / Unix Sockets + XDG (Linux) |
+| LLM Integration | Custom OpenAI-compatible HTTP client |
+| Code Analysis | Microsoft.CodeAnalysis (Roslyn) |
+| DI | Microsoft.Extensions.DependencyInjection |
+| MCP | Custom stdio JSON-RPC client |
+| Build | MSBuild (via dotnet CLI) |
+| Obfuscation | Obfuscar |

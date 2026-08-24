@@ -1,0 +1,40 @@
+{
+  "name": "whatsapp",
+  "description": "Agent for managing WhatsApp communications using the specified phone number +31645192707",
+  "tools": [
+    {
+      "name": "send_message",
+      "description": "Send a WhatsApp message to a specific number",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string",
+            "description": "The recipient's phone number"
+          },
+          "message": {
+            "type": "string",
+            "description": "The text message to send"
+          }
+        },
+        "required": ["to", "message"]
+      }
+    },
+    {
+      "name": "get_messages",
+      "description": "Retrieve messages from a specific conversation",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "The phone number to retrieve messages from"
+          }
+        }
+      }
+    }
+  ],
+  "config": {
+    "phone_number": "+31645192707"
+  }
+}

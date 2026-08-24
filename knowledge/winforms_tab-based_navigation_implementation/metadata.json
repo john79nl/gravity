@@ -1,0 +1,10 @@
+{
+  "name": "WinForms Tab-Based Navigation Implementation",
+  "description": "Pattern for implementing a dynamic tab system using ToolStripButton as tab headers and Panels as content containers in Windows Forms.",
+  "tags": [
+    "WinForms",
+    "C#",
+    "UI-Pattern",
+    "Navigation"
+  ]
+}

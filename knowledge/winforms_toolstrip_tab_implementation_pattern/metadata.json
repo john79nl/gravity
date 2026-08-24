@@ -1,0 +1,10 @@
+{
+  "name": "WinForms ToolStrip Tab Implementation Pattern",
+  "description": "Implementation of a dynamic tab system using ToolStripButton as tab headers and Panels as content containers.",
+  "tags": [
+    "WinForms",
+    "C#",
+    "UI-Pattern",
+    "ToolStrip"
+  ]
+}

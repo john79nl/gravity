@@ -1,0 +1,10 @@
+{
+  "name": "WinForms Dynamic Theme Application Pattern",
+  "description": "A pattern for implementing a dual-theme (Dark/Light) system in WinForms by iterating through control hierarchies and updating color properties dynamically.",
+  "tags": [
+    "WinForms",
+    "C#",
+    "UI/UX",
+    "Theming"
+  ]
+}

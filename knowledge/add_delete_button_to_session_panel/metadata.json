@@ -1,0 +1,9 @@
+{
+  "name": "Add Delete Button to Session Panel",
+  "description": "Implement a delete button functionality for session management by adding button code and connecting it to a delete method for selected sessions.",
+  "tags": [
+    "CSharp",
+    "WindowsForms",
+    "UI-Improvement"
+  ]
+}

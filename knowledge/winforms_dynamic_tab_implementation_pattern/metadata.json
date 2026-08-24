@@ -1,0 +1,10 @@
+{
+  "name": "WinForms Dynamic Tab Implementation Pattern",
+  "description": "A pattern for implementing a tabbed interface using ToolStripButtons as tab headers and Controls as content panels.",
+  "tags": [
+    "WinForms",
+    "UI-Pattern",
+    "C#",
+    "Tabbed-Interface"
+  ]
+}
