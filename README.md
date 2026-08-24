@@ -15,7 +15,7 @@ Gravity AI is an autonomous, multi-agent software engineering environment built 
 ## 🌟 Open Source Vision & Call for Collaboration
 
 ### 💡 The Origin Story: Built Out of Perseverance
-Gravity wasn't created in a big-tech lab with unlimited compute. It was built by **Giovanni D'Arienzo**, a solo developer who was rejected by Google and determined to prove what one passionate engineer can accomplish by building a full-scale, multi-agent AI orchestrator from the ground up.
+Gravity wasn't created in a big-tech lab with unlimited compute. It was built by **Giovanni D'Arienzo**, a solo developer, determined to prove what one passionate engineer can accomplish by building a full-scale, multi-agent AI orchestrator from the ground up.
 
 Instead of waiting for tech giants to dictate the future of autonomous development, Gravity proves that dedication, clean system architecture, and open community collaboration can build world-class agentic software. By releasing Gravity as open-source, we are putting power back into the hands of developers worldwide.
 
