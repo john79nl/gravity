@@ -134,6 +134,20 @@ namespace Gravity
                  "Certain operations that affect your project will pause and ask for your confirmation before proceeding. "
                  + "Review the proposed action and click Allow or Deny as you see fit."),
             }),
+
+            new("🌐  GitHub Repository", "Open Source & Community", new[]
+            {
+                ("Source Code & Repository",
+                 "Gravity AI is an open-source project hosted on GitHub. "
+                 + "View the full source code, report issues, or contribute to development:\n\n"
+                 + "https://github.com/john79nl/gravity"),
+
+                ("Built by Giovanni D'Arienzo",
+                 "Created by solo developer Giovanni D'Arienzo, Gravity is built on the vision of unifying agentic software engineering into one ultimate open-source tool."),
+
+                ("Star & Contribute",
+                 "Check out the GitHub repository to star the project, submit pull requests, or join discussions with the community."),
+            }),
         };
 
         // ── State ─────────────────────────────────────────────────────────────
@@ -190,6 +204,31 @@ namespace Gravity
                 using var pen = new Pen(Color.FromArgb(60, Accent), 1f);
                 e.Graphics.DrawLine(pen, 0, 0, footer.Width, 0);
             };
+            var btnGitHub = new Button
+            {
+                Text      = "🌐 GitHub",
+                Dock      = DockStyle.Right,
+                Width     = 110,
+                Height    = 36,
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.FromArgb(20, 35, 80),
+                ForeColor = Accent,
+                Font      = new Font("Segoe UI", 10f, FontStyle.Bold),
+                Cursor    = Cursors.Hand,
+                Margin    = new Padding(0, 8, 12, 8),
+            };
+            btnGitHub.FlatAppearance.BorderColor        = Color.FromArgb(245, 200, 50);
+            btnGitHub.FlatAppearance.BorderSize         = 1;
+            btnGitHub.FlatAppearance.MouseOverBackColor = Color.FromArgb(40, 60, 130);
+            btnGitHub.Click += (_, _) =>
+            {
+                try
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://github.com/john79nl/gravity") { UseShellExecute = true });
+                }
+                catch { }
+            };
+
             var btnClose = new Button
             {
                 Text      = "Close",
@@ -208,6 +247,7 @@ namespace Gravity
             btnClose.FlatAppearance.MouseOverBackColor    = Color.FromArgb(40, 60, 130);
             btnClose.Click += (_, _) => Close();
             footer.Controls.Add(btnClose);
+            footer.Controls.Add(btnGitHub);
 
             // ── SplitContainer ────────────────────────────────────────────────
             var splitter = new SplitContainer
