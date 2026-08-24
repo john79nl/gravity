@@ -6,12 +6,18 @@
 [![Framework](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/)
 [![Protocol](https://img.shields.io/badge/Protocol-MCP-orange.svg)](https://modelcontextprotocol.io/)
 [![Status](https://img.shields.io/badge/Status-Open_Source-success.svg)](#-open-source-vision--call-for-collaboration)
+[![Donate PayPal](https://img.shields.io/badge/Donate-PayPal-00457C.svg?logo=paypal&logoColor=white)](https://www.paypal.com/donate/?hosted_button_id=R7WX2DZ3KTKDY)
 
 Gravity AI is an autonomous, multi-agent software engineering environment built for local software development. Designed as a high-performance desktop application, Gravity bridges the gap between passive AI autocomplete suggestors and **true, closed-loop autonomous execution**.
 
 ---
 
 ## 🌟 Open Source Vision & Call for Collaboration
+
+### 💡 The Origin Story: Built Out of Perseverance
+Gravity wasn't created in a big-tech lab with unlimited compute. It was built by **Giovanni D'Arienzo**, a solo developer who was rejected by Google and determined to prove what one passionate engineer can accomplish by building a full-scale, multi-agent AI orchestrator from the ground up.
+
+Instead of waiting for tech giants to dictate the future of autonomous development, Gravity proves that dedication, clean system architecture, and open community collaboration can build world-class agentic software. By releasing Gravity as open-source, we are putting power back into the hands of developers worldwide.
 
 ### Why We Are Releasing Gravity Open Source
 Today, the landscape of AI coding tools is fragmented across dozens of single-purpose scripts, extensions, CLI wrappers, and isolated chat plugins. 
@@ -174,6 +180,25 @@ Let's collaborate and make **Gravity** the single, open-source tool that unifies
 
 ---
 
+## 💖 Support & Donate
+
+If you love **Gravity AI** and want to support our mission of building a unified, open-source multi-agent platform for autonomous software engineering, consider donating to the project! Your contributions directly help us dedicate more time to research, infrastructure, and community development.
+
+<p align="center">
+  <a href="https://www.paypal.com/donate/?hosted_button_id=R7WX2DZ3KTKDY" target="_blank">
+    <img src="Resources/paypal_qr.png" width="180" alt="PayPal QR Code Donation Link" />
+  </a>
+  <br />
+  <br />
+  <a href="https://www.paypal.com/donate/?hosted_button_id=R7WX2DZ3KTKDY" target="_blank">
+    <img src="https://img.shields.io/badge/Donate-PayPal-00457C.svg?style=for-the-badge&logo=paypal&logoColor=white" alt="Donate via PayPal" />
+  </a>
+  <br />
+  <sub>Scan the QR code or click the button above to support Gravity AI via PayPal</sub>
+</p>
+
+---
+
 ## 📄 License
 
 Gravity is released under the [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE). 
@@ -181,5 +206,5 @@ Gravity is released under the [GNU Affero General Public License v3.0 (AGPL-3.0)
 ---
 
 <p align="center">
-  <b>Gravity AI</b> • Empowering Developers Through Autonomous Multi-Agent Engineering
+  <b>Gravity AI</b> • Created by <b>Giovanni D'Arienzo</b> • Empowering Developers Through Autonomous Multi-Agent Engineering
 </p>
