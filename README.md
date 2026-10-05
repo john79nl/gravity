@@ -197,6 +197,10 @@ If you love **Gravity AI** and want to support our mission of building a unified
   <sub>Scan the QR code or click the button above to support Gravity AI via PayPal</sub>
 </p>
 
+<p align="center">
+  <b>Discalmer</b> months after pubblication of gravity code, i got a message from someone saying that someone called VIVIEK KUMAR approached users impersonating who created this code. if it happens to be in contact with him, please send me a message and i will reward you. this guys is stalking me and boycotting me, stay away from him.
+</p>
+
 ---
 
 ## 📄 License
