@@ -1,25 +1,11 @@
 # 🌌 Gravity AI
-
-> **An Open-Source Multi-Agent Platform for Autonomous Software Engineering**
-
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
-[![Framework](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/)
-[![Protocol](https://img.shields.io/badge/Protocol-MCP-orange.svg)](https://modelcontextprotocol.io/)
-[![Status](https://img.shields.io/badge/Status-Open_Source-success.svg)](#-open-source-vision--call-for-collaboration)
-[![Donate PayPal](https://img.shields.io/badge/Donate-PayPal-00457C.svg?logo=paypal&logoColor=white)](https://www.paypal.com/donate/?hosted_button_id=R7WX2DZ3KTKDY)
+**An Open-Source Multi-Agent Platform for Autonomous Software Engineering**
 
 Gravity AI is an autonomous, multi-agent software engineering environment built for local software development. Designed as a high-performance desktop application, Gravity bridges the gap between passive AI autocomplete suggestors and **true, closed-loop autonomous execution**.
 
 ---
 
-## 🌟 Open Source Vision & Call for Collaboration
-
-### 💡 The Origin Story: Built Out of Perseverance
-Gravity wasn't created in a big-tech lab with unlimited compute. It was built by **Giovanni D'Arienzo**, a solo developer, determined to prove what one passionate engineer can accomplish by building a full-scale, multi-agent AI orchestrator from the ground up.
-
-Instead of waiting for tech giants to dictate the future of autonomous development, Gravity proves that dedication, clean system architecture, and open community collaboration can build world-class agentic software. By releasing Gravity as open-source, we are putting power back into the hands of developers worldwide.
-
-### Why We Are Releasing Gravity Open Source
+## 🌟 Open Source Vision & Call for Collaboratio
 Today, the landscape of AI coding tools is fragmented across dozens of single-purpose scripts, extensions, CLI wrappers, and isolated chat plugins. 
 
 We are releasing **Gravity AI under an open-source license (AGPL-3.0)** to showcase a full, working autonomous product and to bring together developers, researchers, and creators who are passionate about the future of AI-driven software engineering.
